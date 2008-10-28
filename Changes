@@ -1,0 +1,10 @@
+Revision history for Perl extension Config::Ini.
+
+0.01  Sun Jan 29 10:42:38 2006
+    - original version; created by h2xs 1.23 with options
+        -AX --skip-exporter --use-new-tests -n Config::Ini
+
+0.10  Tue Aug  8 14:01:13 EDT 2006
+    - enhancements and bug fixes for inclusion in sitegen
+        (http://purl.galileo.usg.edu/sitegen/)
+
