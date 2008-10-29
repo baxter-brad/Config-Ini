@@ -2,7 +2,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 18;
+use Test::More tests => 22;
 use Data::Dumper;
 use Config::Ini;
 
@@ -30,12 +30,26 @@ Get_Methods: {
     my $ini = Config::Ini->new( string => $data );
 
     my @sections = $ini->get_sections();
-    is( "@sections", 'section1 section2',
+    is( "@sections", ' section1 section2',  # initial blank for 'null' section
         'get_sections()' );
 
     my @names = map { $ini->get_names( $_ ) } @sections;
-    is( "@names", 'name1.1 name1.2 name2.1 name2.2 name2.3 name2.4',
+    is( "@names", 'name0.1 name0.2 name1.1 name1.2 name2.1 name2.2 name2.3 name2.4',
         'get_names()' );
+
+    @names = $ini->get_names( "" );
+    is( "@names", 'name0.1 name0.2',
+        'get_names()' );
+
+    @names = $ini->get_names();  # should be same as get_names( "" )
+    is( "@names", 'name0.1 name0.2',
+        'get_names()' );
+
+    is( $ini->get( 'name0.1' ), 'value0.1',
+        'get( name )' );
+
+    is( $ini->get( "" => 'name0.2', 0 ), 'value0.2',
+        'get( "", name, 0 )' );
 
     is( $ini->get( section1 => 'name1.1', 0 ), 'value1.1',
         'get( section, name, 0 )' );
@@ -104,6 +118,10 @@ Attributes: {
 }
 
 __DATA__
+# 'null' section
+name0.1 = value0.1
+name0.2 = value0.2
+
 # Section 1
 
 [section1]

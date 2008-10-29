@@ -238,7 +238,7 @@ sub get_sections {
 ## $ini->get_names( $section )
 sub get_names {
     my ( $self, $section ) = @_;
-    return unless defined $section;
+    $section = '' unless defined $section;
 
     return unless defined $self->[SHASH]{ $section }[NAMES];
     return @{$self->[SHASH]{ $section }[NAMES]};
