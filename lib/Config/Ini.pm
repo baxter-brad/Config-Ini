@@ -251,6 +251,11 @@ sub get {
     return unless defined $section;
     ( $name = $section, $section = '' ) unless defined $name;
 
+    # use 'exists' to avoid autovivification
+    return unless
+        exists $self->[SHASH]{ $section } and
+        exists $self->[SHASH]{ $section }[NHASH]{ $name };
+
     my $aref = $self->[SHASH]{ $section }[NHASH]{ $name }[VALS];
     return unless $aref;
     return $aref->[ $i ] if defined $i;
