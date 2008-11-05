@@ -2,7 +2,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 4;
+use Test::More tests => 5;
 use Config::Ini;
 
 my $ini_data = do{ local $/; <DATA> };
@@ -15,6 +15,7 @@ Null_section: {
     is( $ini->get( 'b' ), 'baker',   "get(), null section" );
     is( $ini->get( 'c' ), 'charlie', "get(), null section" );
     is( $ini->get( 'd' ), 'dog',     "get(), null section" );
+    is( $ini->get( 'e' ), 'echo',    "get(), null section" );
 }
 
 __DATA__
@@ -28,4 +29,6 @@ d : dog
 [section1]
 c = charlie
 d = dog
+[] # null section again
+e = echo
 
