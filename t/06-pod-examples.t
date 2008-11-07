@@ -2,10 +2,51 @@
 use warnings;
 use strict;
 
-use Test::More tests => 17;
+use Test::More tests => 18;
 use Config::Ini;
 
 # POD Examples
+
+Synopsis: {
+
+ my $out = '';
+
+ my $ini = Config::Ini->new( string => <<'__' );
+[section_1]
+name_1_1 = value_1_1
+name_1_2 = value_1_2
+[section_2]
+name_2_1 = value_2_1
+name_2_2 = value_2_2
+__
+
+ # traverse the values
+ for my $section ( $ini->get_sections() ) {
+     $out .= sprintf "$section\n";
+ 
+     for my $name ( $ini->get_names( $section ) ) {
+         $out .= sprintf "  $name\n";
+ 
+         for my $value ( $ini->get( $section, $name ) ) {
+             $out .= sprintf "    $value\n";
+         }
+     }
+ }
+
+  is( $out, <<'__', "Synopsis" );
+section_1
+  name_1_1
+    value_1_1
+  name_1_2
+    value_1_2
+section_2
+  name_2_1
+    value_2_1
+  name_2_2
+    value_2_2
+__
+
+}
 
 Terminology: {
 

@@ -2,7 +2,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 22;
+use Test::More tests => 32;
 use Data::Dumper;
 use Config::Ini;
 
@@ -76,7 +76,7 @@ Get_Methods: {
 
 }
 
-Add_Methods: {
+Add_Set_Put_Methods: {
 
     my $data = $ini_data;
     my $ini = Config::Ini->new( string => $data );
@@ -88,6 +88,78 @@ Add_Methods: {
     $ini->add( section4 => 'name4.1', 'value4.1' );
     is( $ini->get( section4 => 'name4.1' ), 'value4.1',
         'add( section(new), name, value )' );
+
+    $ini->set( section3 => 'name3.1', 0, 'value_3_1' );
+    is( $ini->get( section3 => 'name3.1' ), 'value_3_1',
+        'set( section, name, value )' );
+
+    $ini->set( section3 => 'name3.1', 1, 'value_3_2' );
+    is( $ini->get( section3 => 'name3.1' ), 'value_3_1 value_3_2',
+        'set( section, name, value )' );
+
+    $ini->put( section3 => 'name3.1', 'value3.1' );
+    is( $ini->get( section3 => 'name3.1' ), 'value3.1',
+        'put( section, name, value )' );
+
+}
+
+Delete_Methods: {
+
+    my $as_string = sub {
+        my( $ini ) = @_; my $ret = '';
+        for my $s ( $ini->get_sections() )  { $ret .= "[$s]";
+        for my $n ( $ini->get_names( $s ) ) { $ret .= "($n)";
+        for my $v ( $ini->get( $s, $n ) )   { $ret .= "<$v>" } } }
+        $ret;
+    };
+
+    my $data = <<'__';
+n01=v01
+n02=v02
+n03=v03
+[s1]
+n11=v11
+n12=v12
+[s2]
+n21=v21
+n22=v22
+__
+
+    my $ini = Config::Ini->new( string => $data );
+    is( $as_string->( $ini ),
+        '[](n01)<v01>(n02)<v02>(n03)<v03>[s1](n11)<v11>(n12)<v12>[s2](n21)<v21>(n22)<v22>',
+        "delete methods init" );
+
+    $ini->delete_name( '', 'n01' );
+    is( $as_string->( $ini ),
+        '[](n02)<v02>(n03)<v03>[s1](n11)<v11>(n12)<v12>[s2](n21)<v21>(n22)<v22>',
+        "delete_name( '', 'n01' )" );
+
+    $ini->delete_name( 'n02' );
+    is( $as_string->( $ini ),
+        '[](n03)<v03>[s1](n11)<v11>(n12)<v12>[s2](n21)<v21>(n22)<v22>',
+        "delete_name( 'n02' )" );
+
+    $ini->delete_name( 's1', 'n11' );
+    is( $as_string->( $ini ),
+        '[](n03)<v03>[s1](n12)<v12>[s2](n21)<v21>(n22)<v22>',
+        "delete_name( 's1', 'n11' )" );
+
+    $ini->delete_section( '' );
+    is( $as_string->( $ini ),
+        '[s1](n12)<v12>[s2](n21)<v21>(n22)<v22>',
+        "delete_section( '' )" );
+
+    $ini = Config::Ini->new( string => $data );
+    $ini->delete_section();
+    is( $as_string->( $ini ),
+        '[s1](n11)<v11>(n12)<v12>[s2](n21)<v21>(n22)<v22>',
+        "delete_section()" );
+
+    $ini->delete_section( 's2' );
+    is( $as_string->( $ini ),
+        '[s1](n11)<v11>(n12)<v12>',
+        "delete_section( 's2' )" );
 
 }
 

@@ -394,9 +394,8 @@ This is an Ini configuration file processor.
 
 =head2 Terminology
 
-This document uses the terms I<comment>, I<section>,
-I<name>, and I<value> when referring to the following
-parts of the Ini file syntax:
+This document uses the terms I<comment>, I<section>, I<name>, and
+I<value> when referring to the following parts of the Ini file syntax:
 
  # comment
  [section]
@@ -428,7 +427,7 @@ e.g.,
 
 =head3 Comments
 
-Comments may begin with C<#> or C<;>.
+Comments may begin with C<'#'> or C<';'>.
 
  # comments may begin with # or ;, i.e.,
  ; semicolon is valid comment character
@@ -442,7 +441,7 @@ But they may not follow values.
 
 =head3 Assignments
 
-Spaces and tabs around the C<=> and C<:> assignment characters are
+Spaces and tabs around the C<'='> and C<':'> assignment characters are
 stripped, i.e., they are not included in the name or value.  Use
 heredoc syntax to set a value with leading spaces.  Trailing spaces in
 values are left intact.
@@ -499,9 +498,10 @@ as illustrated below.
  value
  heredoc
 
-That is, the heredoc may begin with C<< << >> or C<{> with or without a tag.
-And it may then end with C<< << >> or C<}> (with or without a tag, as it began).
-When a tag is used, the ending C<< << >> or C<}> is optional.
+That is, the heredoc may begin with C<< '<<' >> or C<'{'> with or
+without a tag.  And it may then end with C<< '<<' >> or C<'}'> (with or
+without a tag, as it began).  When a tag is used, the ending
+C<< '<<' >> or C<'}'> is optional.
 
 =head3 Heredoc :modifiers
 
@@ -514,12 +514,12 @@ is read in (i.e., as the object is initialized):
  :parse    - splits on newline (and chomps last line)
  :parse(regex) - splits on regex (still chomps last line)
 
-The :parse modifier uses C<Text::ParseWords::parse_line()>, so CSV-like
-parsing is possible.
+The C<':parse'> modifier uses C<Text::ParseWords::parse_line()>, so
+CSV-like parsing is possible.
 
-Modifiers may be stacked, e.g., C<< <<:chomp:join:indented >> (or
-C<< <<:chomp :join :indented >>), in any order, but note that C<:parse>
-is performed last.
+Modifiers may be stacked, e.g., C<< '<<:chomp:join:indented' >> (or
+C<< '<<:chomp :join :indented' >>), in any order, but note that
+C<':parse'> is performed last.
 
  # value is "Line1\nLine2\n"
  name = <<
@@ -560,7 +560,7 @@ is performed last.
    Line2
  <<
  
- # modifiers may have spaces between
+ # modifiers may have spaces between them
  # value is "Line1Line2"
  name = << :chomp :join :indented
    Line1
@@ -584,7 +584,7 @@ newline (the default).
  value2
  <<
 
-... is the same as,
+... is the same as
 
  name = value1
  name = value2
@@ -595,13 +595,13 @@ newline (the default).
  "Tom, Dick, and Harry", Fred and Wilma
  <<
 
-... is the same as,
+... is the same as
 
  name = Tom, Dick, and Harry
  name = Fred and Wilma
 
-The :parse modifier chomps only the last line, so include C<\n> if
-needed.
+The C<':parse'> modifier chomps only the last line, so include C<'\n'>
+if needed.
 
  # liberal separators
  name = <<:parse([,\s\n]+)
@@ -609,7 +609,7 @@ needed.
  Martha George, 'Hillary and Bill'
  <<
 
-... is the same as,
+... is the same as
 
  name = Tom, Dick, and Harry
  name = Fred and Wilma
@@ -617,12 +617,13 @@ needed.
  name = George
  name = Hillary and Bill
 
-As illustrated above, the enclosing C</> characters around the regular expression
-are optional.  You may also use matching quotes instead, e.g., C<:parse('\s')>.
+As illustrated above, the enclosing C<'/'> characters around the
+regular expression are optional.  You may also use matching quotes
+instead, e.g., C<:parse('\s')>.
 
-
-Modifiers must follow the heredoc characters C<< << >> (or C<{>).  If there
-is a heredoc tag, e.g., C<EOT> below, the modifiers should follow it, too.
+Modifiers must follow the heredoc characters C<< '<<' >> (or C<'{'>).
+If there is a heredoc tag, e.g., C<'EOT'> below, the modifiers should
+follow it, too.
 
  # I want "    Hey"
  name = <<EOT:chomp
@@ -649,22 +650,22 @@ is a heredoc tag, e.g., C<EOT> below, the modifiers should follow it, too.
 
 =item new( fh => $filehandle, file => 'filename' )
 
-Create an object with the new() method, e.g.,
+Use new() to create an object, e.g.,
 
  my $ini = Config::Ini->new( 'inifile' );
 
-If you pass any parameters, the init() method will be called.  If you
-pass only one parameter, it's assumed to be the file name.  Otherwise,
-use the named parameters, C<file>, C<fh>, or C<string> to pass a
-filename, filehandle (already open), or string.  The string is assumed
-to look like the contents of an Ini file.
+If you pass any parameters, the C<init()> method will be called.  If
+you pass only one parameter, it's assumed to be the file name.
+Otherwise, use the named parameters, C<'file'>, C<'fh'>, or C<'string'>
+to pass a filename, filehandle (already open), or string.  The string
+is assumed to look like the contents of an Ini file.
 
-The parameter, C<fh> takes precedent over C<string> which takes
-precedent over C<file>.  You may pass C<< file => 'filename' >> with
-the other parameters to set the C<file> attribute.
+The parameter, C<'fh'> takes precedent over C<'string'> which takes
+precedent over C<'file'>.  You may pass C<< file => 'filename' >> with
+the other parameters to set the C<'file'> attribute.
 
-If you do not pass any parameters to C<new()>, you can later call init()
-with the same parameters described above.
+If you do not pass any parameters to C<new()>, you can later call
+C<init()> with the same parameters described above.
 
 =item init( 'filename' )
 
@@ -689,16 +690,15 @@ with the same parameters described above.
 
 =item get_sections()
 
-Use get_sections() to retrieve a list of the sections in the Ini file.
-They are returned in the order they appear in the file.
+Use C<get_sections()> to retrieve a list of the sections in the Ini
+file.  They are returned in the order they appear in the file.
 
  my @sections = $ini->get_sections();
 
-If there is a 'null section', it will be the first in the
-list.
+If there is a 'null section', it will be the first in the list.
 
-If a section appears twice in a file, it only appears
-once in this list.  This implies that ...
+If a section appears twice in a file, it only appears once in this
+list.  This implies that ...
 
  [section1]
  name1 = value
@@ -717,7 +717,7 @@ is the same as ...
 
 =item get_names( $section )
 
-Use get_names() to retrieve a list of the names in a given section.
+Use C<get_names()> to retrieve a list of the names in a given section.
 
  my @names = $ini->get_names( $section );
 
@@ -738,9 +738,9 @@ is the same as ...
  name1 = another
  name2 = value2
 
-Calling get_names() without a parameter is the same as calling it with
-a null string: it retrieves the names from the 'null section'.  The
-two lines below are equivalent.
+Calling C<get_names()> without a parameter is the same as calling it
+with a null string: it retrieves the names from the 'null section'.
+The two lines below are equivalent.
 
  @names = $ini->get_names();
  @names = $ini->get_names( '' );
@@ -751,11 +751,11 @@ two lines below are equivalent.
 
 =item get( $name )  (assumes $section eq '')
 
-Use get() to retrieve the value or values for a given name.
+Use C<get()> to retrieve the value or values for a given name.
 
 Note: when an Ini object is initialized, if a name appears more than
-once in a section, the values are pushed onto an array, and get() will
-return this array of values.
+once in a section, the values are pushed onto an array, and C<get()>
+will return this array of values.
 
  my @values = $ini->get( $section, $name );
 
@@ -768,26 +768,33 @@ the values in this array.
 
 If the Ini file lists names at the beginning, before any sections are
 given, the section name is assumed to be a null string ('').  If you
-call get() with just one parameter, it is assumed to be a name in this
-'null section'.  If you want to pass an array subscript, then you must
-also pass a null string as the first parameter.
+call C<get()> with just one parameter, it is assumed to be a name in
+this 'null section'.  If you want to pass an array subscript, then you
+must also pass a null string as the first parameter.
 
  my @values = $ini->get( $name );         # assumes $section eq ''
  my $value  = $ini->get( '', $name, 0 );  # get first occurrence
  my $value  = $ini->get( '', $name, -1 ); # get last occurrence
 
+This "null section" concept allows for very simple configuration files
+like:
+
+ title = Hello World
+ color: blue
+ margin: 0
+
 =back
 
 =head2 Add/Set/Put Methods
 
-Here, 'add' denotes pushing values onto the end, 'set', modifying a
-single value, and 'put', replacing all values at once.
+Here, I<add> denotes pushing values onto the end, I<set>, modifying a
+single value, and I<put>, replacing all values at once.
 
 =over 8
 
 =item add( $section, $name, @values )
 
-Use add() to add to the value or values of an option.  If the option
+Use C<add()> to add to the value or values of an option.  If the option
 already has values, the new values will be added to the end (pushed
 onto the array).
 
@@ -799,9 +806,9 @@ To add to the 'null section', pass a null string.
 
 =item set( $section, $name, $i, $value )
 
-Use set() to assign a single value.  Pass undef to remove a value
-altogether.  The $i parameter is the subscript of the values array to
-assign to (or remove).
+Use C<set()> to assign a single value.  Pass C<undef> to remove a value
+altogether.  The C<$i> parameter is the subscript of the values array
+to assign to (or remove).
 
  $ini->set( $section, $name, -1, $value ); # set last value
  $ini->set( $section, $name, 0, undef );   # remove first value
@@ -812,7 +819,7 @@ To set a value in the 'null section', pass a null string.
 
 =item put( $section, $name, @values )
 
-Use put() to assign all values at once.  Any existing values are
+Use C<put()> to assign all values at once.  Any existing values are
 overwritten.
 
  $ini->put( $section, $name, @values );
@@ -829,8 +836,8 @@ To put values in the 'null section', pass a null string.
 
 =item delete_section( $section )
 
-Use delete_section() to delete an entire section, including all of its
-options and their values.
+Use C<delete_section()> to delete an entire section, including all of
+its options and their values.
 
  $ini->delete_section( $section )
 
@@ -842,8 +849,8 @@ string.
 
 =item delete_name( $section, $name )
 
-Use delete_name() to delete a named option and all of its values from a
-section.
+Use C<delete_name()> to delete a named option and all of its values
+from a section.
 
  $ini->delete_name( $section, $name );
 
@@ -853,10 +860,11 @@ pass a null string.
  $ini->delete_name( $name );
  $ini->delete_name( '', $name );
 
-To delete just some of the values, you can use set() with a subscript,
-passing undef to delete each one.  Or you can first get them into an
-array using C<get()>, modify them in that array (e.g., delete some), and
-then use put() to replace the old values with the modified ones.
+To delete just some of the values, you can use C<set()> with a
+subscript, passing C<undef> to delete each one.  Or you can first get
+them into an array using C<get()>, modify them in that array (e.g.,
+delete some), and then use C<put()> to replace the old values with the
+modified ones.
 
 =back
 
@@ -866,15 +874,16 @@ then use put() to replace the old values with the modified ones.
 
 =item file( $value )
 
-Use file() to get or set the C<file> object attribute, which is
+Use C<file()> to get or set the C<'file'> object attribute, which is
 intended to be the filename of the Ini file from which the object was
 created.
 
  $inifile = $ini->file();  # get the name of the file
 
-If C<$value> is not given, file() returns the value of the C<file>
-attribute.  If C<$value> is defined, C<file> is set to C<$value>.  If
-C<$value> is given but is undef, the C<file> attribute is removed.
+If C<$value> is not given, C<file()> returns the value of the C<'file'>
+attribute.  If C<$value> is defined, C<'file'> is set to C<$value>.  If
+C<$value> is given but is C<undef>, the C<'file'> attribute is
+removed.
 
  $ini->file();                # return the file name
  $ini->file( 'myfile.ini' );  # change the file name
