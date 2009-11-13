@@ -40,13 +40,13 @@ Config::Ini - Ini configuration file processor
 
 =head1 VERSION
 
-VERSION: 1.00
+VERSION: 1.01
 
 =cut
 
 # more POD follows the __END__
 
-our $VERSION = '1.00';
+our $VERSION = '1.01';
 
 use Text::ParseWords;
 
@@ -102,6 +102,8 @@ use constant VATTR => 2;  # see Config::Ini::Edit
 # autoloaded accessors
 use subs qw( file );
 
+our $Encoding = 'utf8';
+
 #---------------------------------------------------------------------
 ## $ini = Config::Ini->new( $file )             or
 ## $ini = Config::Ini->new( file   => $file   ) or
@@ -137,10 +139,10 @@ sub init {
 
     unless( $fh ) {
         if( $string ) {
-            open $fh, '<', \$string
+            open $fh, "<:encoding($Encoding)", \$string
                 or croak "Can't open string: $!"; }
         elsif( $file ) {
-            open $fh, '<', $file
+            open $fh, "<:encoding($Encoding)", $file
                 or croak "Can't open $file: $!"; }
         else { croak "Invalid parms" }
     }
@@ -666,6 +668,16 @@ the other parameters to set the C<'file'> attribute.
 
 If you do not pass any parameters to C<new()>, you can later call
 C<init()> with the same parameters described above.
+
+By default, if you give a filename or string, the module will open it
+using ":encoding(utf8)".  You can change this by setting
+$Config::Ini::Encoding, e.g.,
+
+ $Config::Ini::Encoding = "iso-8859-1";
+ my $ini = Config::Ini->new( file => 'filename' );
+
+Alternatively, you may open the file yourself using the desired
+encoding and send the filehandle to new() (or init());
 
 =item init( 'filename' )
 

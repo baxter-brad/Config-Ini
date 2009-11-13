@@ -8,5 +8,7 @@ t/03-altchars.t
 t/04-indent.t
 t/05-nullsection.t
 t/06-pod-examples.t
+t/07-autoviv.t
+t/08-encoding.t
 lib/Config/Ini.pm
 META.yml                                 Module meta-data (added by MakeMaker)
