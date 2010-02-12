@@ -40,13 +40,13 @@ Config::Ini - Ini configuration file processor
 
 =head1 VERSION
 
-VERSION: 1.01
+VERSION: 1.02
 
 =cut
 
 # more POD follows the __END__
 
-our $VERSION = '1.01';
+our $VERSION = '1.02';
 
 use Text::ParseWords;
 
@@ -636,21 +636,17 @@ follow it, too.
 
 =head2 Initialization Methods
 
-=over 8
+=head3 new()
 
-=item new()
+Calling options:
 
-=item new( 'filename' )
-
-=item new( file => 'filename' )
-
-=item new( fh => $filehandle )
-
-=item new( string => $string )
-
-=item new( string => $string, file => 'filename' )
-
-=item new( fh => $filehandle, file => 'filename' )
+ new()
+ new( 'filename' )
+ new( file => 'filename' )
+ new( fh => $filehandle )
+ new( string => $string )
+ new( string => $string, file => 'filename' )
+ new( fh => $filehandle, file => 'filename' )
 
 Use new() to create an object, e.g.,
 
@@ -679,28 +675,25 @@ $Config::Ini::Encoding, e.g.,
 Alternatively, you may open the file yourself using the desired
 encoding and send the filehandle to new() (or init());
 
-=item init( 'filename' )
+=head3 init()
 
-=item init( file => 'filename' )
+Calling options:
 
-=item init( fh => $filehandle )
+ init( 'filename' )
+ init( file => 'filename' )
+ init( fh => $filehandle )
+ init( string => $string )
+ init( string => $string, file => 'filename' )
+ init( fh => $filehandle, file => 'filename' )
 
-=item init( string => $string )
-
-=item init( string => $string, file => 'filename' )
-
-=item init( fh => $filehandle, file => 'filename' )
+Example:
 
  my $ini = Config::Ini->new();
  $ini->init( 'filename' );
 
-=back
-
 =head2 Get Methods
 
-=over 8
-
-=item get_sections()
+=head3 get_sections()
 
 Use C<get_sections()> to retrieve a list of the sections in the Ini
 file.  They are returned in the order they appear in the file.
@@ -727,7 +720,13 @@ is the same as ...
  [section2]
  name2 = value
 
-=item get_names( $section )
+=head3 get_names()
+
+Calling options:
+
+ get_names( $section )
+ get_names( '' )
+ get_names()
 
 Use C<get_names()> to retrieve a list of the names in a given section.
 
@@ -757,11 +756,14 @@ The two lines below are equivalent.
  @names = $ini->get_names();
  @names = $ini->get_names( '' );
 
-=item get( $section, $name )
+=head3 get()
 
-=item get( $section, $name, $i )
+Calling options:
 
-=item get( $name )  (assumes $section eq '')
+ get( $section, $name )
+ get( $section, $name, $i )
+ get( $name )
+ get( '', $name, $i )
 
 Use C<get()> to retrieve the value or values for a given name.
 
@@ -779,7 +781,7 @@ the values in this array.
  my $value = $ini->get( $section, $name, -1 ); # get last one
 
 If the Ini file lists names at the beginning, before any sections are
-given, the section name is assumed to be a null string ('').  If you
+given, the section name is assumed to be a null string (C<''>).  If you
 call C<get()> with just one parameter, it is assumed to be a name in
 this 'null section'.  If you want to pass an array subscript, then you
 must also pass a null string as the first parameter.
@@ -795,16 +797,17 @@ like:
  color: blue
  margin: 0
 
-=back
-
 =head2 Add/Set/Put Methods
 
 Here, I<add> denotes pushing values onto the end, I<set>, modifying a
 single value, and I<put>, replacing all values at once.
 
-=over 8
+=head3 add()
 
-=item add( $section, $name, @values )
+Calling options:
+
+ add( $section, $name, @values )
+ add( '', $name, @values )
 
 Use C<add()> to add to the value or values of an option.  If the option
 already has values, the new values will be added to the end (pushed
@@ -816,11 +819,16 @@ To add to the 'null section', pass a null string.
 
  $ini->add( '', $name, @values );
 
-=item set( $section, $name, $i, $value )
+=head3 set()
 
-Use C<set()> to assign a single value.  Pass C<undef> to remove a value
-altogether.  The C<$i> parameter is the subscript of the values array
-to assign to (or remove).
+Calling options:
+
+ set( $section, $name, $i, $value )
+ set( '', $name, $i, $value )
+
+Use C<set()> to assign a single value.  Pass a value of C<undef> to
+remove a value altogether.  The C<$i> parameter is the subscript of the
+values array to assign to (or remove).
 
  $ini->set( $section, $name, -1, $value ); # set last value
  $ini->set( $section, $name, 0, undef );   # remove first value
@@ -829,7 +837,12 @@ To set a value in the 'null section', pass a null string.
 
  $ini->set( '', $name, 1, $value ); # set second value
 
-=item put( $section, $name, @values )
+=head3 put()
+
+Calling options:
+
+ put( $section, $name, @values )
+ put( '', $name, @values )
 
 Use C<put()> to assign all values at once.  Any existing values are
 overwritten.
@@ -840,13 +853,15 @@ To put values in the 'null section', pass a null string.
 
  $ini->put( '', $name, @values );
 
-=back
-
 =head2 Delete Methods
 
-=over 8
+=head3 delete_section()
 
-=item delete_section( $section )
+Calling options:
+
+ delete_section( $section )
+ delete_section( '' )
+ delete_section()
 
 Use C<delete_section()> to delete an entire section, including all of
 its options and their values.
@@ -859,7 +874,13 @@ string.
  $ini->delete_section();
  $ini->delete_section( '' );
 
-=item delete_name( $section, $name )
+=head3 delete_name( $section, $name )
+
+Calling options:
+
+ delete_name( $section, $name )
+ delete_name( '', $name )
+ delete_name( $name )
 
 Use C<delete_name()> to delete a named option and all of its values
 from a section.
@@ -878,13 +899,15 @@ them into an array using C<get()>, modify them in that array (e.g.,
 delete some), and then use C<put()> to replace the old values with the
 modified ones.
 
-=back
-
 =head2 Other Accessor Methods
 
-=over 8
+=head3 file()
 
-=item file( $value )
+Calling options:
+
+ file()
+ file( $value )
+ file( undef )
 
 Use C<file()> to get or set the C<'file'> object attribute, which is
 intended to be the filename of the Ini file from which the object was
@@ -901,8 +924,6 @@ removed.
  $ini->file( 'myfile.ini' );  # change the file name
  $ini->file( undef );         # remove the file attribute
 
-=back
-
 =head1 SEE ALSO
 
 Config::Ini::Edit,
@@ -911,13 +932,11 @@ Config::Ini::Quote,
 Config::IniFiles,
 Config:: ... (many others)
 
-=head1 AUTHOR
+=head1 AUTHOR, COPYRIGHT, AND LICENSE
 
 Brad Baxter, E<lt>bmb@mail.libs.uga.eduE<gt>
 
-=head1 COPYRIGHT AND LICENSE
-
-Copyright (C) 2008 by Brad Baxter
+Copyright (C) 2010 by Brad Baxter
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself, either Perl version 5.8.7 or,

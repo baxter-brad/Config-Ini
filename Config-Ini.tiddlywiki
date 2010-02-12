@@ -1,0 +1,581 @@
+!NAME
+Config::Ini - Ini configuration file processor
+
+!SYNOPSIS
+{{{
+ use Config::Ini;
+ 
+ my $ini = Config::Ini->new( 'file.ini' );
+ 
+ # traverse the values
+ for my $section ( $ini->get_sections() ) {
+     print "$section\n";
+ 
+     for my $name ( $ini->get_names( $section ) ) {
+         print "  $name\n";
+ 
+         for my $value ( $ini->get( $section, $name ) ) {
+             print "    $value\n";
+         }
+     }
+ }
+}}}
+
+!VERSION
+VERSION: 1.02
+
+!DESCRIPTION
+This is an Ini configuration file processor.
+
+!!Terminology
+This document uses the terms //comment//, //section//, //name//, and //value// when referring to the following parts of the Ini file syntax:
+
+{{{
+ # comment
+ [section]
+ name = value
+}}}
+
+In particular 'name' is the term used to refer to the named options within the sections. This terminology is also reflected in method names, like {{{get_sections()}}} and {{{get_names()}}}.
+
+!!Syntax
+!!!The //null section//
+At the top of an Ini file, before any sections have been explicitly defined, name/value pairs may be defined. These are assumed to be in the 'null section', as if an explicit {{{[]}}} line were present.
+
+{{{
+ # before any sections are defined,
+ # assume section eq '', the "null section"
+ name = value
+ name: value
+}}}
+
+This 'null section' concept allows for very simple configuration files, e.g.,
+
+{{{
+ title = Hello World
+ color: blue
+ margin: 0
+}}}
+
+!!!Comments
+Comments may begin with {{{'#'}}} or {{{';'}}}.
+
+{{{
+ # comments may begin with # or ;, i.e.,
+ ; semicolon is valid comment character
+}}}
+
+Comments may begin on a separate line or may follow section headings. But they may not follow values.
+
+{{{
+ # this is a comment
+ [section] # this is a comment
+ name = value # this is NOT a comment (it is part of the value)
+}}}
+
+!!!Assignments
+Spaces and tabs around the {{{'='}}} and {{{':'}}} assignment characters are stripped, i.e., they are not included in the name or value. Use heredoc syntax to set a value with leading spaces. Trailing spaces in values are left intact.
+
+{{{
+ [section]
+ 
+ # spaces/tabs around '=' are stripped
+ # use heredoc to give a value with leading spaces
+ # trailing spaces are left intact
+ 
+ name=value
+ name= value
+ name =value
+ name = value
+ name    =    value
+ 
+ # colon is valid assignment character, too.
+ name:value
+ name: value
+ name :value
+ name : value
+ name    :    value
+}}}
+
+!!!Heredocs
+Heredoc syntax may be used to assign values that span multiple lines. Heredoc syntax is supported in more ways than just the classic syntax, as illustrated below.
+
+{{{
+ # classic heredoc:
+ name = <<heredoc
+ Heredocs are supported several ways.
+ This is the "classic" syntax, using a
+ "heredoc tag" to mark the begin and end.
+ heredoc
+ 
+ # ... and the following is supported because I kept doing this
+ name = <<heredoc
+ value
+ <<heredoc
+ 
+ # ... and also the following, because often no one cares what it's called
+ name = <<
+ value
+ <<
+ 
+ # ... and finally "block style" (for vi % support)
+ name = {
+ value
+ }
+ 
+ # ... and obscure variations, e.g.,
+ name = {heredoc
+ value
+ heredoc
+}}}
+
+That is, the heredoc may begin with {{{'<<'}}} or {{{'{'}}} with or without a tag. And it may then end with {{{'<<'}}} or {{{'}'}}} (with or without a tag, as it began). When a tag is used, the ending {{{'<<'}}} or {{{'}'}}} is optional.
+
+!!!Heredoc :modifiers
+There are several ways to modify the value in a heredoc as the Ini file is read in (i.e., as the object is initialized):
+
+{{{
+ :chomp    - chomps the last line
+ :join     - chomps every line BUT the last one
+ :indented - unindents every line (strips leading whitespace)
+ :parse    - splits on newline (and chomps last line)
+ :parse(regex) - splits on regex (still chomps last line)
+}}}
+
+The {{{':parse'}}} modifier uses {{{Text::ParseWords::parse_line()}}}, so CSV-like parsing is possible.
+
+Modifiers may be stacked, e.g., {{{'<<:chomp:join:indented'}}} (or {{{'<<:chomp :join :indented'}}}), in any order, but note that {{{':parse'}}} is performed last.
+
+{{{
+ # value is "Line1\nLine2\n"
+ name = <<
+ Line1
+ Line2
+ <<
+ 
+ # value is "Line1\nLine2"
+ name = <<:chomp
+ Line1
+ Line2
+ <<
+ 
+ # value is "Line1Line2\n"
+ name = <<:join
+ Line1
+ Line2
+ <<
+ 
+ # value is "Line1Line2"
+ name = <<:chomp:join
+ Line1
+ Line2
+ <<
+ 
+ # value is "  Line1\n  Line2\n"
+ name = <<
+   Line1
+   Line2
+ <<
+ 
+ # - indentations do NOT have to be regular to be unindented
+ # - any leading spaces/tabs on every line will be stripped
+ # - trailing spaces are left intact, as usual
+ # value is "Line1\nLine2\n"
+ name = <<:indented
+   Line1
+   Line2
+ <<
+ 
+ # modifiers may have spaces between them
+ # value is "Line1Line2"
+ name = << :chomp :join :indented
+   Line1
+   Line2
+ <<
+ 
+ # ... and should come after a heredoc "tag"
+ # value is "Line1Line2"
+ name = <<heredoc :chomp :join :indented
+   Line1
+   Line2
+ heredoc
+}}}
+
+The :parse modifier splits a single value into multiple values. It may be given with a regular expression parameter to split on other than newline (the default).
+
+{{{
+ # :parse is same as :parse(\n)
+ name = <<:parse
+ value1
+ value2
+ <<
+}}}
+
+... is the same as
+
+{{{
+ name = value1
+ name = value2
+}}}
+
+... and
+
+{{{
+ name = <<:parse(/,\s+/)
+ "Tom, Dick, and Harry", Fred and Wilma
+ <<
+}}}
+
+... is the same as
+
+{{{
+ name = Tom, Dick, and Harry
+ name = Fred and Wilma
+}}}
+
+The {{{':parse'}}} modifier chomps only the last line, so include {{{'\n'}}} if needed.
+
+{{{
+ # liberal separators
+ name = <<:parse([,\s\n]+)
+ "Tom, Dick, and Harry" "Fred and Wilma"
+ Martha George, 'Hillary and Bill'
+ <<
+}}}
+
+... is the same as
+
+{{{
+ name = Tom, Dick, and Harry
+ name = Fred and Wilma
+ name = Martha
+ name = George
+ name = Hillary and Bill
+}}}
+
+As illustrated above, the enclosing {{{'/'}}} characters around the regular expression are optional. You may also use matching quotes instead, e.g., {{{:parse('\s')}}}.
+
+Modifiers must follow the heredoc characters {{{'<<'}}} (or {{{'{'}}}). If there is a heredoc tag, e.g., {{{'EOT'}}} below, the modifiers should follow it, too.
+
+{{{
+ # I want "    Hey"
+ name = <<EOT:chomp
+     Hey
+ EOT
+}}}
+
+!METHODS
+!!Initialization Methods
+!!!new()
+Calling options:
+
+{{{
+ new()
+ new( 'filename' )
+ new( file => 'filename' )
+ new( fh => $filehandle )
+ new( string => $string )
+ new( string => $string, file => 'filename' )
+ new( fh => $filehandle, file => 'filename' )
+}}}
+
+Use new() to create an object, e.g.,
+
+{{{
+ my $ini = Config::Ini->new( 'inifile' );
+}}}
+
+If you pass any parameters, the {{{init()}}} method will be called. If you pass only one parameter, it's assumed to be the file name. Otherwise, use the named parameters, {{{'file'}}}, {{{'fh'}}}, or {{{'string'}}} to pass a filename, filehandle (already open), or string. The string is assumed to look like the contents of an Ini file.
+
+The parameter, {{{'fh'}}} takes precedent over {{{'string'}}} which takes precedent over {{{'file'}}}. You may pass {{{file => 'filename'}}} with the other parameters to set the {{{'file'}}} attribute.
+
+If you do not pass any parameters to {{{new()}}}, you can later call {{{init()}}} with the same parameters described above.
+
+By default, if you give a filename or string, the module will open it using ":encoding(utf8)". You can change this by setting $Config::Ini::Encoding, e.g.,
+
+{{{
+ $Config::Ini::Encoding = "iso-8859-1";
+ my $ini = Config::Ini->new( file => 'filename' );
+}}}
+
+Alternatively, you may open the file yourself using the desired encoding and send the filehandle to new() (or init());
+
+!!!init()
+Calling options:
+
+{{{
+ init( 'filename' )
+ init( file => 'filename' )
+ init( fh => $filehandle )
+ init( string => $string )
+ init( string => $string, file => 'filename' )
+ init( fh => $filehandle, file => 'filename' )
+}}}
+
+Example:
+
+{{{
+ my $ini = Config::Ini->new();
+ $ini->init( 'filename' );
+}}}
+
+!!Get Methods
+!!!get_sections()
+Use {{{get_sections()}}} to retrieve a list of the sections in the Ini file. They are returned in the order they appear in the file.
+
+{{{
+ my @sections = $ini->get_sections();
+}}}
+
+If there is a 'null section', it will be the first in the list.
+
+If a section appears twice in a file, it only appears once in this list. This implies that ...
+
+{{{
+ [section1]
+ name1 = value
+ [section2]
+ name2 = value
+ [section1]
+ name3 = value
+}}}
+
+is the same as ...
+
+{{{
+ [section1]
+ name1 = value
+ name3 = value
+ [section2]
+ name2 = value
+}}}
+
+!!!get_names()
+Calling options:
+
+{{{
+ get_names( $section )
+ get_names( '' )
+ get_names()
+}}}
+
+Use {{{get_names()}}} to retrieve a list of the names in a given section.
+
+{{{
+ my @names = $ini->get_names( $section );
+}}}
+
+They are returned in the order they appear in the section.
+
+If a name appears twice in a section, it only appears once in this list. This implies that ...
+
+{{{
+ [section]
+ name1 = value1
+ name2 = value2
+ name1 = another
+}}}
+
+is the same as ...
+
+{{{
+ [section]
+ name1 = value1
+ name1 = another
+ name2 = value2
+}}}
+
+Calling {{{get_names()}}} without a parameter is the same as calling it with a null string: it retrieves the names from the 'null section'. The two lines below are equivalent.
+
+{{{
+ @names = $ini->get_names();
+ @names = $ini->get_names( '' );
+}}}
+
+!!!get()
+Calling options:
+
+{{{
+ get( $section, $name )
+ get( $section, $name, $i )
+ get( $name )
+ get( '', $name, $i )
+}}}
+
+Use {{{get()}}} to retrieve the value or values for a given name.
+
+Note: when an Ini object is initialized, if a name appears more than once in a section, the values are pushed onto an array, and {{{get()}}} will return this array of values.
+
+{{{
+ my @values = $ini->get( $section, $name );
+}}}
+
+Pass an array subscript as the third parameter to return only one of the values in this array.
+
+{{{
+ my $value = $ini->get( $section, $name, 0 );  # get first one
+ my $value = $ini->get( $section, $name, 1 );  # get second one
+ my $value = $ini->get( $section, $name, -1 ); # get last one
+}}}
+
+If the Ini file lists names at the beginning, before any sections are given, the section name is assumed to be a null string ({{{''}}}). If you call {{{get()}}} with just one parameter, it is assumed to be a name in this 'null section'. If you want to pass an array subscript, then you must also pass a null string as the first parameter.
+
+{{{
+ my @values = $ini->get( $name );         # assumes $section eq ''
+ my $value  = $ini->get( '', $name, 0 );  # get first occurrence
+ my $value  = $ini->get( '', $name, -1 ); # get last occurrence
+}}}
+
+This "null section" concept allows for very simple configuration files like:
+
+{{{
+ title = Hello World
+ color: blue
+ margin: 0
+}}}
+
+!!Add/Set/Put Methods
+Here, //add// denotes pushing values onto the end, //set//, modifying a single value, and //put//, replacing all values at once.
+
+!!!add()
+Calling options:
+
+{{{
+ add( $section, $name, @values )
+ add( '', $name, @values )
+}}}
+
+Use {{{add()}}} to add to the value or values of an option. If the option already has values, the new values will be added to the end (pushed onto the array).
+
+{{{
+ $ini->add( $section, $name, @values );
+}}}
+
+To add to the 'null section', pass a null string.
+
+{{{
+ $ini->add( '', $name, @values );
+}}}
+
+!!!set()
+Calling options:
+
+{{{
+ set( $section, $name, $i, $value )
+ set( '', $name, $i, $value )
+}}}
+
+Use {{{set()}}} to assign a single value. Pass a value of {{{undef}}} to remove a value altogether. The {{{$i}}} parameter is the subscript of the values array to assign to (or remove).
+
+{{{
+ $ini->set( $section, $name, -1, $value ); # set last value
+ $ini->set( $section, $name, 0, undef );   # remove first value
+}}}
+
+To set a value in the 'null section', pass a null string.
+
+{{{
+ $ini->set( '', $name, 1, $value ); # set second value
+}}}
+
+!!!put()
+Calling options:
+
+{{{
+ put( $section, $name, @values )
+ put( '', $name, @values )
+}}}
+
+Use {{{put()}}} to assign all values at once. Any existing values are overwritten.
+
+{{{
+ $ini->put( $section, $name, @values );
+}}}
+
+To put values in the 'null section', pass a null string.
+
+{{{
+ $ini->put( '', $name, @values );
+}}}
+
+!!Delete Methods
+!!!delete_section()
+Calling options:
+
+{{{
+ delete_section( $section )
+ delete_section( '' )
+ delete_section()
+}}}
+
+Use {{{delete_section()}}} to delete an entire section, including all of its options and their values.
+
+{{{
+ $ini->delete_section( $section )
+}}}
+
+To delete the 'null section', don't pass any parameters or pass a null string.
+
+{{{
+ $ini->delete_section();
+ $ini->delete_section( '' );
+}}}
+
+!!!delete_name( $section, $name )
+Calling options:
+
+{{{
+ delete_name( $section, $name )
+ delete_name( '', $name )
+ delete_name( $name )
+}}}
+
+Use {{{delete_name()}}} to delete a named option and all of its values from a section.
+
+{{{
+ $ini->delete_name( $section, $name );
+}}}
+
+To delete an option from the 'null section', pass just the name, or pass a null string.
+
+{{{
+ $ini->delete_name( $name );
+ $ini->delete_name( '', $name );
+}}}
+
+To delete just some of the values, you can use {{{set()}}} with a subscript, passing {{{undef}}} to delete each one. Or you can first get them into an array using {{{get()}}}, modify them in that array (e.g., delete some), and then use {{{put()}}} to replace the old values with the modified ones.
+
+!!Other Accessor Methods
+!!!file()
+Calling options:
+
+{{{
+ file()
+ file( $value )
+ file( undef )
+}}}
+
+Use {{{file()}}} to get or set the {{{'file'}}} object attribute, which is intended to be the filename of the Ini file from which the object was created.
+
+{{{
+ $inifile = $ini->file();  # get the name of the file
+}}}
+
+If {{{$value}}} is not given, {{{file()}}} returns the value of the {{{'file'}}} attribute. If {{{$value}}} is defined, {{{'file'}}} is set to {{{$value}}}. If {{{$value}}} is given but is {{{undef}}}, the {{{'file'}}} attribute is removed.
+
+{{{
+ $ini->file();                # return the file name
+ $ini->file( 'myfile.ini' );  # change the file name
+ $ini->file( undef );         # remove the file attribute
+}}}
+
+!SEE ALSO
+Config::Ini::Edit, Config::Ini::Expanded, Config::Ini::Quote, Config::~IniFiles, Config:: ... (many others)
+
+!AUTHOR, COPYRIGHT, AND LICENSE
+Brad Baxter, <bmb@mail.libs.uga.edu>
+
+Copyright (C) 2010 by Brad Baxter
+
+This library is free software; you can redistribute it and/or modify it under the same terms as Perl itself, either Perl version 5.8.7 or, at your option, any later version of Perl 5 you may have available.
+

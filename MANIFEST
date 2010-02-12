@@ -2,6 +2,7 @@ Changes
 Makefile.PL
 MANIFEST
 README
+Config-Ini.tiddlywiki
 t/01-string-file-fh.t
 t/02-general.t
 t/03-altchars.t
