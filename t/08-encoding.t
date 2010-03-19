@@ -2,7 +2,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 7;
+use Test::More tests => 8;
 use Encode;
 
 BEGIN { use_ok('Config::Ini') };
@@ -36,13 +36,19 @@ like( $from_latin1, qr/^[[:print:]]+$/, 'is recognized printable'  );
 
 is( $from_utf8, $from_latin1, 'internal representations equal' );
 
-# default $Config::Ini::Encoding = 'utf8'
+# default $Config::Ini::encoding = 'utf8'
 my $ini_from_utf8 = Config::Ini->new( string => $utf8_data );
 
-$Config::Ini::Encoding = 'iso-8859-1';
+$Config::Ini::encoding = 'iso-8859-1';
 my $ini_from_latin1 = Config::Ini->new( string => $latin1_data );
 
 is( $ini_from_utf8->as_string(), $ini_from_latin1->as_string(), "as_string's equal" );
+
+# XXX can this be counted on?
+$Config::Ini::encoding = '';
+my $ini_no_encoding = Config::Ini->new( string => $latin1_data );
+
+is( $ini_from_latin1->as_string(), $ini_no_encoding->as_string(), "non-encoded as_string equal to latin1" );
 
 package Config::Ini;
 

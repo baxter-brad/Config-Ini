@@ -40,13 +40,13 @@ Config::Ini - Ini configuration file processor
 
 =head1 VERSION
 
-VERSION: 1.02
+VERSION: 1.03
 
 =cut
 
 # more POD follows the __END__
 
-our $VERSION = '1.02';
+our $VERSION = '1.03';
 
 use Text::ParseWords;
 
@@ -99,10 +99,7 @@ use constant VATTR => 2;  # see Config::Ini::Edit
 # ATTRS:        { ... },
 #           ],
 
-# autoloaded accessors
-use subs qw( file );
-
-our $Encoding = 'utf8';
+our $encoding = 'utf8';  # for new()/init()
 
 #---------------------------------------------------------------------
 ## $ini = Config::Ini->new( $file )             or
@@ -126,24 +123,44 @@ sub init {
     my ( $self, @parms ) = @_;
 
     my ( $file, $fh, $string );
-    if( @parms == 1 ) {
-        $file   = $parms[0];
-    }
-    else {
-        my %parms = @parms;
-        $fh     = $parms{'fh'};
-        $string = $parms{'string'};
-        $file   = $parms{'file'};
+    my %parms;
+    if( @parms == 1 ) { %parms = ( file => $parms[0] ) }
+    else              { %parms = @parms }
+    $file     = $parms{'file'};
+    $fh       = $parms{'fh'};
+    $string   = $parms{'string'};
+
+    # see AUTOLOAD() for (almost) parallel list of attributes
+    for( qw( encoding ) ) {
+        no strict 'refs';  # so "$$_" will get above values
+        $self->_attr( $_ =>
+            (defined $parms{ $_ }) ? $parms{ $_ } : $$_ );
     }
     $self->_attr( file => $file ) if $file;
 
+    my $encoding = $self->encoding();
+
     unless( $fh ) {
         if( $string ) {
-            open $fh, "<:encoding($Encoding)", \$string
-                or croak "Can't open string: $!"; }
+            if( $encoding ) {
+                open $fh, "<:encoding($encoding)", \$string
+                    or croak "Can't open string: $!";
+            }
+            else {
+                open $fh, "<", \$string
+                    or croak "Can't open string: $!";
+            }
+        }
         elsif( $file ) {
-            open $fh, "<:encoding($Encoding)", $file
-                or croak "Can't open $file: $!"; }
+            if( $encoding ) {
+                open $fh, "<:encoding($encoding)", $file
+                    or croak "Can't open $file: $!";
+            }
+            else {
+                open $fh, "<", $file
+                    or croak "Can't open $file: $!";
+            }
+        }
         else { croak "Invalid parms" }
     }
 
@@ -346,7 +363,12 @@ our $AUTOLOAD;
 sub AUTOLOAD {
     my $attribute = $AUTOLOAD;
     $attribute =~ s/.*:://;
-    die "Undefined: $attribute()" unless $attribute eq 'file';
+
+    # see init() for (almost) parallel list of attributes
+    die "Undefined: $attribute()" unless $attribute =~ /^(?:
+        file | encoding
+        )$/x;
+
     my $self = shift;
     $self->_attr( $attribute, @_ );
 }
@@ -667,13 +689,16 @@ C<init()> with the same parameters described above.
 
 By default, if you give a filename or string, the module will open it
 using ":encoding(utf8)".  You can change this by setting
-$Config::Ini::Encoding, e.g.,
+$Config::Ini::encoding, e.g.,
 
- $Config::Ini::Encoding = "iso-8859-1";
+ $Config::Ini::encoding = "iso-8859-1";
  my $ini = Config::Ini->new( file => 'filename' );
 
 Alternatively, you may open the file yourself using the desired
 encoding and send the filehandle to new() (or init());
+
+Set this to a false value, e.g., C<''> or C<0> to keep the
+module from specifying any encoding.
 
 =head3 init()
 
@@ -874,7 +899,7 @@ string.
  $ini->delete_section();
  $ini->delete_section( '' );
 
-=head3 delete_name( $section, $name )
+=head3 delete_name()
 
 Calling options:
 
@@ -906,7 +931,7 @@ modified ones.
 Calling options:
 
  file()
- file( $value )
+ file( $filename )
  file( undef )
 
 Use C<file()> to get or set the C<'file'> object attribute, which is
