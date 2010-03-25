@@ -99,7 +99,7 @@ use constant VATTR => 2;  # see Config::Ini::Edit
 # ATTRS:        { ... },
 #           ],
 
-our $encoding = 'utf8';  # for new()/init()
+our $encoding = '';  # for new()/init()
 
 #---------------------------------------------------------------------
 ## $ini = Config::Ini->new( $file )             or
@@ -687,18 +687,19 @@ the other parameters to set the C<'file'> attribute.
 If you do not pass any parameters to C<new()>, you can later call
 C<init()> with the same parameters described above.
 
-By default, if you give a filename or string, the module will open it
-using ":encoding(utf8)".  You can change this by setting
-$Config::Ini::encoding, e.g.,
+By default, if you give a filename or string, the module will not
+specify any encoding, and thus will rely on perl's default behavior.
+You can change this by setting $Config::Ini::encoding, e.g.,
 
- $Config::Ini::encoding = "iso-8859-1";
+ $Config::Ini::encoding = "utf8";
  my $ini = Config::Ini->new( file => 'filename' );
 
 Alternatively, you may open the file yourself using the desired
 encoding and send the filehandle to new() (or init());
 
 Set this to a false value, e.g., C<''> or C<0> to keep the
-module from specifying any encoding.
+module from specifying any encoding, i.e., to return to the
+default behavior.
 
 =head3 init()
 
