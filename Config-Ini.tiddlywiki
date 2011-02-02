@@ -22,7 +22,7 @@ Config::Ini - Ini configuration file processor
 }}}
 
 !VERSION
-VERSION: 1.03
+VERSION: 1.04
 
 !DESCRIPTION
 This is an Ini configuration file processor.
@@ -577,7 +577,7 @@ Config::Ini::Edit, Config::Ini::Expanded, Config::Ini::Quote, Config::~IniFiles,
 !AUTHOR, COPYRIGHT, AND LICENSE
 Brad Baxter, <bmb@mail.libs.uga.edu>
 
-Copyright (C) 2010 by Brad Baxter
+Copyright (C) 2011 by Brad Baxter
 
 This library is free software; you can redistribute it and/or modify it under the same terms as Perl itself, either Perl version 5.8.7 or, at your option, any later version of Perl 5 you may have available.
 

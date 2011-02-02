@@ -2,7 +2,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 32;
+use Test::More tests => 33;
 use Data::Dumper;
 use Config::Ini;
 
@@ -187,6 +187,23 @@ Attributes: {
     is( $ini->file( undef ), undef , "file()" );
     eval { $ini->you_dont_know_me( 1 ); };
     ok ( $@ =~ /^Undefined: you_dont_know_me()/, "undefined sub()" );
+}
+
+Heredoc_Bugfix: {
+
+    # before the fix, this was seen as
+    # "name = This is a" = {test
+    # and was an unterminated heredoc
+    # after the fix, it's DWIM, i.e.,
+    # "name" = "This is a = {test"
+
+    my $string = <<__;
+[section]
+name = This is a = {test
+__
+
+    my $ini = Config::Ini->new( string => $string );
+    ok( $ini, "heredoc bugfix, new() didn't die" );
 }
 
 __DATA__

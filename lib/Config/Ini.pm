@@ -40,13 +40,13 @@ Config::Ini - Ini configuration file processor
 
 =head1 VERSION
 
-VERSION: 1.03
+VERSION: 1.04
 
 =cut
 
 # more POD follows the __END__
 
-our $VERSION = '1.03';
+our $VERSION = '1.04';
 
 use Text::ParseWords;
 
@@ -178,6 +178,11 @@ sub init {
         }
 
         # [section]
+
+        # (excluding {} because of Config::Ini::Expanded's
+        # expansion syntax {INI:section:name} -- if section
+        # contains {}, it's confusing for the code)
+
         if( /^\[([^{}\]]*)\]/ ) {
             $section = $1;
             $self->_autovivify( $section );
@@ -186,7 +191,7 @@ sub init {
 
         # <<heredoc
         # Note: name = {xyz} must not be seen as a heredoc
-        elsif( /^\s*(.+?)\s*[=:]\s*(<<|{)\s*([^}]*?)\s*$/ ) {
+        elsif( /^\s*([^=:]+?)\s*[=:]\s*(<<|{)\s*([^}]*?)\s*$/ ) {
             $name       = $1;
             my $style   = $2;
             my $heretag = $3;
@@ -229,7 +234,7 @@ sub init {
         }  # elsif (heredoc)
 
         # name = value
-        elsif( /^\s*(.+?)\s*[=:]\s*(.*)$/ ) {
+        elsif( /^\s*([^=:]+?)\s*[=:]\s*(.*)$/ ) {
             $name = $1;
             $value = $2;
         }
@@ -962,7 +967,7 @@ Config:: ... (many others)
 
 Brad Baxter, E<lt>bmb@mail.libs.uga.eduE<gt>
 
-Copyright (C) 2010 by Brad Baxter
+Copyright (C) 2011 by Brad Baxter
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself, either Perl version 5.8.7 or,
